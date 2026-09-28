@@ -1,0 +1,26 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: matrix
+      POSTGRES_PASSWORD: matrix
+      POSTGRES_DB: matrix
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # Локальный Oracle для разработки, если нет доступа к боевому.
+  # Запуск: docker compose --profile oracle up -d
+  oracle:
+    image: gvenzl/oracle-free:23-slim
+    profiles: ["oracle"]
+    environment:
+      ORACLE_PASSWORD: oracle
+      APP_USER: reader
+      APP_USER_PASSWORD: secret
+    ports:
+      - "1521:1521"
+
+volumes:
+  pgdata:
