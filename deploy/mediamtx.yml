@@ -1,0 +1,58 @@
+# MediaMTX settings for Matrix.
+#
+# MediaMTX pulls RTSP streams from cameras, records them and serves them over
+# WebRTC/HLS. Matrix configures camera paths through the API at runtime, so
+# this file holds only server-wide settings. Every HTTP endpoint listens on
+# localhost: browsers reach video only through Matrix, which checks sign-in.
+# Only the WebRTC media port (UDP 8189) has to be reachable from clients.
+
+logLevel: info
+
+authMethod: internal
+authInternalUsers:
+  # Matrix itself, connecting from the same machine.
+  - user: any
+    pass:
+    ips: ["127.0.0.1", "::1"]
+    permissions:
+      - action: read
+      - action: playback
+      - action: api
+
+api: true
+apiAddress: 127.0.0.1:9997
+
+metrics: false
+pprof: false
+
+playback: true
+playbackAddress: 127.0.0.1:9996
+
+rtsp: true
+rtspAddress: 127.0.0.1:8554
+rtspTransports: [tcp]
+
+rtmp: false
+srt: false
+moq: false
+
+hls: true
+hlsAddress: 127.0.0.1:8888
+hlsVariant: lowLatency
+hlsAlwaysRemux: false
+
+webrtc: true
+webrtcAddress: 127.0.0.1:8889
+# UDP port for WebRTC video. Open it in the firewall.
+webrtcLocalUDPAddress: :8189
+webrtcLocalTCPAddress: :8189
+# Add the server's public IP or hostname here (or set MTX_WEBRTCADDITIONALHOSTS)
+# when clients reach Matrix through NAT.
+webrtcAdditionalHosts: []
+
+pathDefaults:
+  recordPath: ./recordings/%path/%Y-%m-%d_%H-%M-%S-%f
+  recordFormat: fmp4
+  recordPartDuration: 1s
+  recordSegmentDuration: 1h
+  recordDeleteAfter: 168h

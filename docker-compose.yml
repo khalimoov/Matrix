@@ -1,0 +1,43 @@
+# Matrix VMS: web server + MediaMTX media engine.
+#
+#   docker compose up -d --build
+#   docker compose logs matrix      # shows the generated admin password on first start
+#
+# Both services use the host network: ONVIF discovery needs multicast on the
+# local network and WebRTC needs the host's real IP addresses.
+# Open TCP 8080 (web) and UDP+TCP 8189 (WebRTC video) in the firewall.
+
+services:
+  mediamtx:
+    image: bluenviron/mediamtx:1.21.2
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - ./deploy/mediamtx.yml:/mediamtx.yml:ro
+      - recordings:/recordings
+    environment:
+      MTX_PATHDEFAULTS_RECORDPATH: /recordings/%path/%Y-%m-%d_%H-%M-%S-%f
+      # Public IP or hostname of this server when clients connect through NAT:
+      # MTX_WEBRTCADDITIONALHOSTS: 203.0.113.10
+
+  matrix:
+    build: .
+    image: matrix-vms:latest
+    network_mode: host
+    restart: unless-stopped
+    depends_on: [mediamtx]
+    environment:
+      MATRIX_ADDR: ":8080"
+      # Initial password of the "admin" user. If unset, one is generated and logged.
+      # MATRIX_ADMIN_PASSWORD: change-me-now
+      # Set to "true" when Matrix is served over HTTPS (behind a reverse proxy).
+      # MATRIX_SECURE_COOKIES: "true"
+    volumes:
+      - data:/data
+      - recordings:/recordings:ro
+
+volumes:
+  data:
+  # To keep video on a large disk, replace with a bind mount, for example:
+  #   recordings: { driver: local, driver_opts: { type: none, o: bind, device: /mnt/video } }
+  recordings:
